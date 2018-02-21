@@ -3,6 +3,7 @@ test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
 import random
+import math
 
 
 class SearchTimeout(Exception):
@@ -35,7 +36,16 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+
+    # Improved score
+    my_moves = len(game.get_legal_moves(player))
+    enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    return float(my_moves - 3 * enemy_moves)
 
 
 def custom_score_2(game, player):
@@ -61,7 +71,6 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
 
 
 def custom_score_3(game, player):
@@ -87,7 +96,7 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+
 
 
 class IsolationPlayer:
@@ -112,6 +121,7 @@ class IsolationPlayer:
         positive value large enough to allow the function to return before the
         timer expires.
     """
+
     def __init__(self, search_depth=3, score_fn=custom_score, timeout=10.):
         self.search_depth = search_depth
         self.score = score_fn
@@ -209,11 +219,48 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
         # TODO: finish this function!
-        raise NotImplementedError
+        best_score = float("-inf")
+        best_move = None
+        for m in game.get_legal_moves(game.active_player):
+            v = self.min_value(game.forecast_move(m), depth - 1)
+            if v > best_score:
+                best_score = v
+                best_move = m
+        return best_move
+
+    def terminal_state(self, game, depth):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+        if not bool(game.get_legal_moves()) or depth == 0:
+            return True
+        else:
+            return False
+
+    def min_value(self, game, depth):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+        if self.terminal_state(game, depth):
+            return self.score(game, self)
+        v = float("inf")
+        for m in game.get_legal_moves():  # Game here is a complete different "board" since foreacast move returns a new "game"
+            v = min(v, self.max_value(game.forecast_move(m), depth - 1))
+
+        return v
+
+    def max_value(self, game, depth):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+        if self.terminal_state(game, depth):
+            return self.score(game, self)
+        v = float("-inf")
+        for m in game.get_legal_moves():  # Game here is a complete different "board" since foreacast move returns a new "game"
+            v = max(v, self.min_value(game.forecast_move(m), depth - 1))
+        return v
 
 
 class AlphaBetaPlayer(IsolationPlayer):
@@ -253,9 +300,20 @@ class AlphaBetaPlayer(IsolationPlayer):
             (-1, -1) if there are no available legal moves.
         """
         self.time_left = time_left
-
         # TODO: finish this function!
-        raise NotImplementedError
+        beta = float("inf")
+        alpha = float("-inf")
+        best_move = (-1, 1)
+        depth = 1
+        try:
+            while True:
+                if self.time_left() < self.TIMER_THRESHOLD:
+                    raise SearchTimeout()
+                best_move = self.alphabeta(game, depth, alpha, beta)
+                depth = depth + 1
+        except SearchTimeout:
+            pass
+        return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -306,4 +364,53 @@ class AlphaBetaPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # TODO: finish this function!
-        raise NotImplementedError
+        best_score = float("-inf")
+        best_move = None
+        for m in game.get_legal_moves():
+            v = self.min_value_2(game.forecast_move(m), depth - 1, alpha, beta)
+            alpha = max(v, alpha)
+            if v > best_score:
+                best_score = v
+                best_move = m
+        return best_move
+
+    def max_value_2(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+        if self.terminal_state_2(game, depth):
+            return self.score(game, self)
+        v = float("-inf")
+        for m in game.get_legal_moves():
+            v = max(v, self.min_value_2(game.forecast_move(m), depth - 1, alpha, beta))
+            if v >= beta:
+                break
+            alpha = max(alpha, v)
+        return v
+
+    def min_value_2(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if self.terminal_state_2(game, depth):
+            return self.score(game, self)
+        v = float("inf")
+        for m in game.get_legal_moves():
+            v = min(v, self.max_value_2(game.forecast_move(m), depth - 1, alpha, beta))
+            if v <= alpha:
+                break
+            beta = min(beta, v)
+        return v
+
+    def terminal_state_2(self, game, depth):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        # Restrict depth of tree search
+        if depth == 0:
+            return True
+
+        # Player is out of moves
+        if not bool(game.get_legal_moves()):
+            return True
+
+        return False

@@ -254,17 +254,18 @@ class HumanPlayer():
 
 if __name__ == "__main__":
     from isolation import Board
-
+    from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score, custom_score_2, custom_score_3)
     # create an isolation board (by default 7x7)
-    player1 = RandomPlayer()
+
+    player1 = AlphaBetaPlayer(score_fn=custom_score_2)
     player2 = GreedyPlayer()
     game = Board(player1, player2)
 
     # place player 1 on the board at row 2, column 3, then place player 2 on
     # the board at row 0, column 5; display the resulting board state.  Note
     # that the .apply_move() method changes the calling object in-place.
-    game.apply_move((2, 3))
-    game.apply_move((0, 5))
+    game.apply_move((0, 0))
+    game.apply_move((3, 5))
     print(game.to_string())
 
     # players take turns moving on the board, so player1 should be next to move
