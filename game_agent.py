@@ -10,7 +10,6 @@ class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
     pass
 
-
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
@@ -36,16 +35,17 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
+    tunning=4
+
     if game.is_loser(player):
         return float("-inf")
 
     if game.is_winner(player):
         return float("inf")
 
-    # Improved score
     my_moves = len(game.get_legal_moves(player))
     enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    return float(my_moves - 3 * enemy_moves)
+    return float(my_moves - tunning * enemy_moves)
 
 
 def custom_score_2(game, player):
@@ -71,6 +71,30 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+    #Try to find the center of the table at the beggining of the game
+    tunning_1=4
+    tunning_2=60.0
+    center=[float(game.height/2),float(game.width/2)]
+    movements=game.move_count
+    loc=game.get_player_location(player)
+    total=float(game.height*game.width)
+    percentage=100*(total-float(len(game.get_blank_spaces())))/total
+    my_moves = len(game.get_legal_moves(player))
+    enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    distance=float(abs(loc[0]-center[0])+abs(loc[1]-center[1]))
+    if movements <= 3:
+        if distance == 0.0:
+            distance = 1
+        return float(my_moves - tunning_1 * enemy_moves) + 1 / distance * tunning_2
+    else:
+
+        return float(my_moves - tunning_1 * enemy_moves) 
+
 
 
 def custom_score_3(game, player):
@@ -96,6 +120,34 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+    # Try to disturb opponent
+    tunning_1=4
+    tunning_2=10
+    tunning_3=5
+    center=[float(game.height/2),float(game.width/2)]
+    movements=game.move_count
+
+    loc=game.get_player_location(player)
+    total=float(game.height*game.width)
+    percentage=100*(total-float(len(game.get_blank_spaces())))/total
+    my_moves = len(game.get_legal_moves(player))
+    enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    distance=float(abs(loc[0]-center[0])+abs(loc[1]-center[1]))
+    my_moves = len(game.get_legal_moves(player))
+    enemy_moves = game.get_legal_moves(game.get_opponent(player))
+    Overlap = set(game.get_legal_moves(player)) & set(game.get_legal_moves(game.get_opponent(player)))
+    if movements <=3:
+        if distance==0.0:
+            distance=1
+        return float(my_moves - tunning_1 * enemy_moves) + 1/distance * tunning_2
+    else:
+
+        return float(my_moves - tunning_1 * enemy_moves) + tunning_3 * len(Overlap)
 
 
 
