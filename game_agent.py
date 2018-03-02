@@ -78,22 +78,21 @@ def custom_score_2(game, player):
         return float("inf")
     #Try to find the center of the table at the beggining of the game
     tunning_1=4
-    tunning_2=60.0
+    nmovements=3
     center=[float(game.height/2),float(game.width/2)]
     movements=game.move_count
     loc=game.get_player_location(player)
-    total=float(game.height*game.width)
-    percentage=100*(total-float(len(game.get_blank_spaces())))/total
     my_moves = len(game.get_legal_moves(player))
     enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
     distance=float(abs(loc[0]-center[0])+abs(loc[1]-center[1]))
-    if movements <= 3:
+    if movements <= nmovements:
         if distance == 0.0:
             distance = 1
-        return float(my_moves - tunning_1 * enemy_moves) + 1 / distance * tunning_2
+        return 100.0/ distance
+
     else:
 
-        return float(my_moves - tunning_1 * enemy_moves) 
+        return float(my_moves - tunning_1 * enemy_moves)
 
 
 
@@ -127,8 +126,8 @@ def custom_score_3(game, player):
         return float("inf")
     # Try to disturb opponent
     tunning_1=4
-    tunning_2=10
-    tunning_3=5
+    nmovements=2
+    tunning_2=4
     center=[float(game.height/2),float(game.width/2)]
     movements=game.move_count
 
@@ -138,16 +137,13 @@ def custom_score_3(game, player):
     my_moves = len(game.get_legal_moves(player))
     enemy_moves = len(game.get_legal_moves(game.get_opponent(player)))
     distance=float(abs(loc[0]-center[0])+abs(loc[1]-center[1]))
-    my_moves = len(game.get_legal_moves(player))
-    enemy_moves = game.get_legal_moves(game.get_opponent(player))
-    Overlap = set(game.get_legal_moves(player)) & set(game.get_legal_moves(game.get_opponent(player)))
-    if movements <=3:
+    overlap = set(game.get_legal_moves(player)) & set(game.get_legal_moves(game.get_opponent(player)))
+    if movements <=nmovements :
         if distance==0.0:
             distance=1
-        return float(my_moves - tunning_1 * enemy_moves) + 1/distance * tunning_2
+        return 100.0/ distance
     else:
-
-        return float(my_moves - tunning_1 * enemy_moves) + tunning_3 * len(Overlap)
+        return float(my_moves - tunning_1 * enemy_moves) + 50*len(overlap)
 
 
 
@@ -274,10 +270,14 @@ class MinimaxPlayer(IsolationPlayer):
 
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
+        if not game.get_legal_moves():
+            return (-1, -1)
+
 
         # TODO: finish this function!
         best_score = float("-inf")
-        best_move = None
+        moves=game.get_legal_moves(game.active_player)
+        best_move = moves[0]
         for m in game.get_legal_moves(game.active_player):
             v = self.min_value(game.forecast_move(m), depth - 1)
             if v > best_score:
@@ -359,8 +359,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         depth = 1
         try:
             while True:
-                if self.time_left() < self.TIMER_THRESHOLD:
-                    raise SearchTimeout()
                 best_move = self.alphabeta(game, depth, alpha, beta)
                 depth = depth + 1
         except SearchTimeout:
@@ -412,13 +410,18 @@ class AlphaBetaPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+
+
+        # TODO: finish this function!
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
         best_score = float("-inf")
-        best_move = None
-        for m in game.get_legal_moves():
+        legal_moves=game.get_legal_moves()
+        if not legal_moves:
+            return (-1,-1)
+        best_move=legal_moves[0]
+        for m in legal_moves:
             v = self.min_value_2(game.forecast_move(m), depth - 1, alpha, beta)
             alpha = max(v, alpha)
             if v > best_score:
